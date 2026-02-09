@@ -3,14 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Halaman Saya</title>
+    <title>Game Tebak Angka</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
-        h1 { color: blue; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #feedback {
+            font-size: 18px;
+            margin: 20px;
+            color: #d9534f;
+        }
+        #attempts {
+            font-size: 16px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
-    <h1>Halo, Dunia!</h1>
-    <p>Ini adalah situs web sederhana yang saya buat dengan bantuan AI.</p>
+    <h1>Game Tebak Angka</h1>
+    <p>Saya telah memilih angka acak antara 1 dan 100. Coba tebak!</p>
+    <input type="number" id="guess" min="1" max="100" placeholder="Masukkan angka">
+    <button onclick="checkGuess()">Tebak</button>
+    <button onclick="resetGame()">Reset</button>
+    <p id="feedback"></p>
+    <p id="attempts">Percobaan: 0</p>
+
+    <script>
+        let randomNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0;
+
+        function checkGuess() {
+            const guess = parseInt(document.getElementById('guess').value);
+            const feedback = document.getElementById('feedback');
+            const attemptsDisplay = document.getElementById('attempts');
+
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                feedback.textContent = "Masukkan angka antara 1 dan 100!";
+                return;
+            }
+
+            attempts++;
+            attemptsDisplay.textContent = `Percobaan: ${attempts}`;
+
+            if (guess === randomNumber) {
+                feedback.textContent = `Selamat! Anda menebak dengan benar dalam ${attempts} percobaan.`;
+                feedback.style.color = "#5cb85c";
+            } else if (guess < randomNumber) {
+                feedback.textContent = "Terlalu kecil! Coba lagi.";
+            } else {
+                feedback.textContent = "Terlalu besar! Coba lagi.";
+            }
+        }
+
+        function resetGame() {
+            randomNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            document.getElementById('guess').value = '';
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('attempts').textContent = 'Percobaan: 0';
+        }
+    </script>
 </body>
 </html>
