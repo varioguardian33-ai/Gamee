@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Tebak Angka</title>
+    <title>Snake Game</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 50px;
+            margin: 20px;
             background-color: #f0f0f0;
         }
         h1 {
             color: #333;
         }
-        input {
-            padding: 10px;
-            font-size: 16px;
-            margin: 10px;
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+            display: block;
+            margin: 0 auto;
         }
         button {
             padding: 10px 20px;
@@ -31,60 +32,127 @@
         button:hover {
             background-color: #45a049;
         }
-        #feedback {
+        #score {
             font-size: 18px;
-            margin: 20px;
-            color: #d9534f;
-        }
-        #attempts {
-            font-size: 16px;
             color: #666;
         }
     </style>
 </head>
 <body>
-    <h1>Game Tebak Angka</h1>
-    <p>Saya telah memilih angka acak antara 1 dan 100. Coba tebak!</p>
-    <input type="number" id="guess" min="1" max="100" placeholder="Masukkan angka">
-    <button onclick="checkGuess()">Tebak</button>
-    <button onclick="resetGame()">Reset</button>
-    <p id="feedback"></p>
-    <p id="attempts">Percobaan: 0</p>
+    <h1>Snake Game</h1>
+    <p>Gunakan panah keyboard untuk mengontrol ular. Makan makanan merah untuk skor!</p>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <p id="score">Skor: 0</p>
+    <button onclick="resetGame()">Reset Game</button>
 
     <script>
-        let randomNumber = Math.floor(Math.random() * 100) + 1;
-        let attempts = 0;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
 
-        function checkGuess() {
-            const guess = parseInt(document.getElementById('guess').value);
-            const feedback = document.getElementById('feedback');
-            const attemptsDisplay = document.getElementById('attempts');
+        let snake = [{ x: 10, y: 10 }];
+        let food = { x: 15, y: 15 };
+        let dx = 0;
+        let dy = 0;
+        let score = 0;
+        let gameRunning = true;
 
-            if (isNaN(guess) || guess < 1 || guess > 100) {
-                feedback.textContent = "Masukkan angka antara 1 dan 100!";
+        function drawGame() {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw snake
+            ctx.fillStyle = '#4CAF50';
+            for (let segment of snake) {
+                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+            }
+
+            // Draw food
+            ctx.fillStyle = '#d9534f';
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+        }
+
+        function moveSnake() {
+            if (!gameRunning) return;
+
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+            // Check wall collision
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                gameRunning = false;
+                alert('Game Over! Tabrakan dengan dinding. Skor: ' + score);
                 return;
             }
 
-            attempts++;
-            attemptsDisplay.textContent = `Percobaan: ${attempts}`;
+            // Check self collision
+            for (let segment of snake) {
+                if (head.x === segment.x && head.y === segment.y) {
+                    gameRunning = false;
+                    alert('Game Over! Tabrakan dengan diri sendiri. Skor: ' + score);
+                    return;
+                }
+            }
 
-            if (guess === randomNumber) {
-                feedback.textContent = `Selamat! Anda menebak dengan benar dalam ${attempts} percobaan.`;
-                feedback.style.color = "#5cb85c";
-            } else if (guess < randomNumber) {
-                feedback.textContent = "Terlalu kecil! Coba lagi.";
+            snake.unshift(head);
+
+            // Check food collision
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                document.getElementById('score').textContent = 'Skor: ' + score;
+                food = { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount) };
             } else {
-                feedback.textContent = "Terlalu besar! Coba lagi.";
+                snake.pop();
             }
         }
 
-        function resetGame() {
-            randomNumber = Math.floor(Math.random() * 100) + 1;
-            attempts = 0;
-            document.getElementById('guess').value = '';
-            document.getElementById('feedback').textContent = '';
-            document.getElementById('attempts').textContent = 'Percobaan: 0';
+        function changeDirection(event) {
+            const LEFT_KEY = 37;
+            const RIGHT_KEY = 39;
+            const UP_KEY = 38;
+            const DOWN_KEY = 40;
+
+            const keyPressed = event.keyCode;
+            const goingUp = dy === -1;
+            const goingDown = dy === 1;
+            const goingRight = dx === 1;
+            const goingLeft = dx === -1;
+
+            if (keyPressed === LEFT_KEY && !goingRight) {
+                dx = -1;
+                dy = 0;
+            }
+            if (keyPressed === UP_KEY && !goingDown) {
+                dx = 0;
+                dy = -1;
+            }
+            if (keyPressed === RIGHT_KEY && !goingLeft) {
+                dx = 1;
+                dy = 0;
+            }
+            if (keyPressed === DOWN_KEY && !goingUp) {
+                dx = 0;
+                dy = 1;
+            }
         }
+
+        function gameLoop() {
+            moveSnake();
+            drawGame();
+        }
+
+        function resetGame() {
+            snake = [{ x: 10, y: 10 }];
+            food = { x: 15, y: 15 };
+            dx = 0;
+            dy = 0;
+            score = 0;
+            gameRunning = true;
+            document.getElementById('score').textContent = 'Skor: 0';
+        }
+
+        document.addEventListener('keydown', changeDirection);
+        setInterval(gameLoop, 100); // Game speed (ms)
     </script>
 </body>
 </html>
