@@ -3,81 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tes Reflek - Ultimate Edition</title>
+    <title>Tes Reflek - Ultimate</title>
     <style>
-        :root { --neon: #00f2fe; --danger: #ff4757; --success: #2ed573; }
+        :root {
+            --neon: #00f2fe;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --bg: #121212;
+        }
+
         body { 
-            background: #121212; color: white; font-family: 'Segoe UI', sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; margin: 0; overflow: hidden;
+            background: var(--bg);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
-        h1 { font-size: 2.5rem; margin-bottom: 5px; text-shadow: 3px 3px 0px var(--danger); }
-        
-        /* Stats & Info */
-        .top-bar { display: flex; gap: 15px; margin-bottom: 10px; }
+
+        /* Judul Gaya Gambar */
+        h1 { 
+            font-size: 3rem;
+            margin: 0 0 10px 0;
+            text-shadow: 3px 3px 0px var(--danger);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Panel Kontrol & Statistik */
+        .controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            border: 1px solid var(--neon);
+            cursor: pointer;
+        }
+
         .stats-container {
-            display: flex; gap: 20px; background: #222; padding: 10px 30px;
-            border-radius: 50px; border: 1px solid #444; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            display: flex;
+            gap: 20px;
+            background: #222;
+            padding: 12px 35px;
+            border-radius: 50px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid #444;
         }
-        .stat-box { font-weight: bold; font-size: 0.9rem; }
-        #goalVal { color: var(--success); } #timerVal { color: #ffbc00; }
 
-        /* Arena dengan Animasi Level Up */
+        .stat-box { font-size: 1.1rem; font-weight: bold; }
+        #timerVal { color: #ffbc00; }
+        #scoreVal { color: var(--success); }
+        #levelVal { color: var(--neon); }
+
+        /* Arena Game */
         #game-container {
-            position: relative; width: 90vw; max-width: 650px; height: 400px;
-            background: #1a1a1a; border: 3px solid #fff; border-radius: 20px;
-            box-shadow: 0 0 20px var(--neon); overflow: hidden;
+            position: relative;
+            width: 90vw;
+            max-width: 700px;
+            height: 450px;
+            background: #1a1a1a;
+            border: 3px solid #fff;
+            border-radius: 20px;
+            box-shadow: 0 0 20px var(--neon);
+            overflow: hidden;
+            transition: background 0.3s;
         }
 
-        /* Animasi Flash Level Up */
-        .level-up-flash {
-            animation: flash 0.6s ease-out;
-        }
-        @keyframes flash {
-            0% { background: var(--success); opacity: 0.8; }
-            100% { background: #1a1a1a; opacity: 1; }
-        }
-
+        /* Target */
         #target {
-            position: absolute; width: 60px; height: 60px;
+            position: absolute;
+            width: 65px;
+            height: 65px;
             background: radial-gradient(circle, var(--danger), #b33939);
-            border-radius: 50%; box-shadow: 0 0 20px var(--danger);
-            cursor: pointer; display: none; align-items: center; justify-content: center;
-            font-size: 25px; user-select: none; z-index: 5;
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--danger);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            user-select: none;
+            z-index: 5;
+            transition: width 0.2s, height 0.2s;
         }
 
-        /* Overlay & Leaderboard */
-        #overlay {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center;
+        /* Overlay Layar Start & Game Over */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 17px;
         }
-        .modal { background: white; color: #333; padding: 25px; border-radius: 20px; text-align: center; width: 280px; }
-        .highscore { margin-top: 10px; font-size: 0.8rem; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
-        button { padding: 10px 20px; background: var(--danger); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+
+        .modal {
+            background: white;
+            color: #333;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            min-width: 250px;
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        /* Tombol Animasi */
+        .btn-fancy {
+            padding: 15px 35px;
+            font-size: 1.2rem;
+            background: linear-gradient(45deg, var(--danger), #ff6b81);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+            animation: pulse 1.5s infinite;
+            margin-top: 15px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 71, 87, 0.5); }
+            50% { transform: scale(1.08); box-shadow: 0 0 30px rgba(255, 71, 87, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 71, 87, 0.5); }
+        }
+
+        /* Animasi Flash saat naik level */
+        .level-up-flash {
+            animation: flashEffect 0.5s ease-out;
+        }
+        @keyframes flashEffect {
+            0% { background: rgba(46, 213, 115, 0.4); }
+            100% { background: #1a1a1a; }
+        }
+
+        .highscore-text {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 10px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
 
     <h1>Tes Reflek</h1>
 
-    <div class="top-bar">
-        <div class="stats-container">
-            <div class="stat-box">Lvl: <span id="levelVal">1</span></div>
-            <div class="stat-box">Goal: <span id="clicksLeft">5</span></div>
-            <div class="stat-box">Skor: <span id="scoreVal">0</span></div>
-            <div class="stat-box">Waktu: <span id="timerVal">30</span>s</div>
-        </div>
+    <div class="controls">
+        <label>Waktu:</label>
+        <select id="timeSelect">
+            <option value="15">15 Detik</option>
+            <option value="30" selected>30 Detik</option>
+            <option value="60">60 Detik</option>
+        </select>
+    </div>
+
+    <div class="stats-container">
+        <div class="stat-box">Lvl: <span id="levelVal">1</span></div>
+        <div class="stat-box">Goal: <span id="clicksLeft">5</span></div>
+        <div class="stat-box">Skor: <span id="scoreVal">0</span></div>
+        <div class="stat-box">Waktu: <span id="timerVal">--</span></div>
     </div>
     
     <div id="game-container">
+        <div id="start-screen" class="overlay">
+            <button class="btn-fancy" onclick="startGame()">Mulai Game</button>
+        </div>
+
         <div id="target">🎯</div>
         
-        <div id="overlay">
+        <div id="game-over-screen" class="overlay" style="display: none;">
             <div class="modal">
-                <h2 id="msgTitle">WAKTU HABIS!</h2>
-                <p>Skor Akhir: <strong id="finalScore">0</strong></p>
-                <div class="highscore">🏆 High Score: <span id="bestScore">0</span></div>
-                <button onclick="startGame()">Main Lagi</button>
+                <h2 id="msgTitle" style="margin:0">WAKTU HABIS!</h2>
+                <p>Skor Kamu: <strong id="finalScore" style="font-size: 1.5rem;">0</strong></p>
+                <div class="highscore-text">🏆 Skor Tertinggi: <span id="bestScore">0</span></div>
+                <button class="btn-fancy" style="font-size: 1rem; padding: 10px 25px;" onclick="startGame()">Main Lagi</button>
             </div>
         </div>
     </div>
@@ -90,18 +207,19 @@
         const timerDisplay = document.getElementById('timerVal');
         const levelDisplay = document.getElementById('levelVal');
         const clicksLeftDisplay = document.getElementById('clicksLeft');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        
+        let score, level, timeLeft, gameActive = false, timerInterval;
+        let clicksInLevel, clicksNeeded;
 
-        let score = 0, level = 1, timeLeft = 30, gameActive = false, timerInterval;
-        let clicksInLevel = 0;
-        let clicksNeeded = 5; // Klik yang dibutuhkan untuk naik level
-
-        // Tampilkan Highscore saat awal
+        // Muat High Score
         document.getElementById('bestScore').textContent = localStorage.getItem('reflekHighScore') || 0;
 
-        function playSound(freq, type = 'triangle', duration = 0.1) {
+        function playBeep(freq, duration = 0.1) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = type;
+            osc.type = 'triangle';
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
             osc.connect(gain); gain.connect(audioCtx.destination);
@@ -118,40 +236,49 @@
         function levelUp() {
             level++;
             clicksInLevel = 0;
-            clicksNeeded += 2; // Setiap level butuh 2 klik lebih banyak
-            timeLeft += 5; // Bonus waktu setiap naik level!
-            
+            clicksNeeded += 3;
+            timeLeft += 5; // Bonus waktu
             levelDisplay.textContent = level;
             
-            // Animasi transisi level
+            // Animasi Flash
             container.classList.add('level-up-flash');
-            setTimeout(() => container.classList.remove('level-up-flash'), 600);
+            setTimeout(() => container.classList.remove('level-up-flash'), 500);
             
-            // Suara level up (nada naik)
-            playSound(800, 'square', 0.3);
+            // Suara Level Up
+            playBeep(900, 0.4);
             
-            // Target makin kecil
-            let size = Math.max(25, 60 - (level * 3));
+            // Ukuran target mengecil
+            let size = Math.max(25, 65 - (level * 4));
             target.style.width = size + 'px';
             target.style.height = size + 'px';
         }
 
         function startGame() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            score = 0; level = 1; clicksInLevel = 0; clicksNeeded = 5; timeLeft = 30;
-            gameActive = true;
             
+            // Reset Variable
+            score = 0; level = 1; clicksInLevel = 0; clicksNeeded = 5;
+            timeLeft = parseInt(document.getElementById('timeSelect').value);
+            gameActive = true;
+
+            // UI Reset
             scoreDisplay.textContent = score;
             levelDisplay.textContent = level;
             clicksLeftDisplay.textContent = clicksNeeded;
-            target.style.display = 'flex';
-            document.getElementById('overlay').style.display = 'none';
+            timerDisplay.textContent = timeLeft + "s";
             
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            target.style.display = 'flex';
+            target.style.width = '65px';
+            target.style.height = '65px';
+
             moveTarget();
+            
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 timeLeft--;
-                timerDisplay.textContent = timeLeft;
+                timerDisplay.textContent = timeLeft + "s";
                 if (timeLeft <= 0) endGame();
             }, 1000);
         }
@@ -161,21 +288,21 @@
             clearInterval(timerInterval);
             target.style.display = 'none';
             
-            // Simpan Highscore
+            // Update High Score
             const hiScore = localStorage.getItem('reflekHighScore') || 0;
             if (score > hiScore) {
                 localStorage.setItem('reflekHighScore', score);
-                document.getElementById('msgTitle').textContent = "REKOR BARU!";
+                document.getElementById('msgTitle').textContent = "REKOR BARU! 🏆";
             } else {
                 document.getElementById('msgTitle').textContent = "WAKTU HABIS!";
             }
             
-            document.getElementById('overlay').style.display = 'flex';
             document.getElementById('finalScore').textContent = score;
             document.getElementById('bestScore').textContent = localStorage.getItem('reflekHighScore');
+            gameOverScreen.style.display = 'flex';
         }
 
-        target.addEventListener('mousedown', () => {
+        target.addEventListener('mousedown', (e) => {
             if (!gameActive) return;
             
             score++;
@@ -183,7 +310,7 @@
             scoreDisplay.textContent = score;
             
             // Suara klik acak
-            playSound(400 + Math.random() * 600);
+            playBeep(400 + Math.random() * 500);
 
             if (clicksInLevel >= clicksNeeded) {
                 levelUp();
