@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tes Reflek - Ultimate</title>
+    <title>Tes Reflek - Ultimate Leaderboard</title>
     <style>
         :root {
             --neon: #00f2fe;
@@ -25,7 +25,6 @@
             overflow: hidden;
         }
 
-        /* Judul Gaya Gambar */
         h1 { 
             font-size: 3rem;
             margin: 0 0 10px 0;
@@ -34,7 +33,6 @@
             text-transform: uppercase;
         }
 
-        /* Panel Kontrol & Statistik */
         .controls {
             margin-bottom: 15px;
             display: flex;
@@ -62,12 +60,11 @@
             border: 1px solid #444;
         }
 
-        .stat-box { font-size: 1.1rem; font-weight: bold; }
+        .stat-box { font-size: 1rem; font-weight: bold; }
         #timerVal { color: #ffbc00; }
         #scoreVal { color: var(--success); }
         #levelVal { color: var(--neon); }
 
-        /* Arena Game */
         #game-container {
             position: relative;
             width: 90vw;
@@ -78,10 +75,8 @@
             border-radius: 20px;
             box-shadow: 0 0 20px var(--neon);
             overflow: hidden;
-            transition: background 0.3s;
         }
 
-        /* Target */
         #target {
             position: absolute;
             width: 65px;
@@ -96,10 +91,8 @@
             font-size: 28px;
             user-select: none;
             z-index: 5;
-            transition: width 0.2s, height 0.2s;
         }
 
-        /* Overlay Layar Start & Game Over */
         .overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -109,7 +102,6 @@
             align-items: center;
             justify-content: center;
             z-index: 10;
-            border-radius: 17px;
         }
 
         .modal {
@@ -118,11 +110,9 @@
             padding: 30px;
             border-radius: 20px;
             text-align: center;
-            min-width: 250px;
-            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+            min-width: 280px;
         }
 
-        /* Tombol Animasi */
         .btn-fancy {
             padding: 15px 35px;
             font-size: 1.2rem;
@@ -139,12 +129,11 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 71, 87, 0.5); }
-            50% { transform: scale(1.08); box-shadow: 0 0 30px rgba(255, 71, 87, 0.8); }
-            100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 71, 87, 0.5); }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
         }
 
-        /* Animasi Flash saat naik level */
         .level-up-flash {
             animation: flashEffect 0.5s ease-out;
         }
@@ -153,13 +142,14 @@
             100% { background: #1a1a1a; }
         }
 
-        .highscore-text {
+        .highscore-area {
             font-size: 0.9rem;
-            color: #777;
-            margin-top: 10px;
-            border-top: 1px solid #eee;
+            color: #555;
+            margin-top: 15px;
+            border-top: 2px dashed #ddd;
             padding-top: 10px;
         }
+        #bestName { font-weight: bold; color: var(--danger); }
     </style>
 </head>
 <body>
@@ -167,7 +157,7 @@
     <h1>Tes Reflek</h1>
 
     <div class="controls">
-        <label>Waktu:</label>
+        <label>Set Waktu:</label>
         <select id="timeSelect">
             <option value="15">15 Detik</option>
             <option value="30" selected>30 Detik</option>
@@ -193,7 +183,12 @@
             <div class="modal">
                 <h2 id="msgTitle" style="margin:0">WAKTU HABIS!</h2>
                 <p>Skor Kamu: <strong id="finalScore" style="font-size: 1.5rem;">0</strong></p>
-                <div class="highscore-text">🏆 Skor Tertinggi: <span id="bestScore">0</span></div>
+                
+                <div class="highscore-area">
+                    🏆 PENGUASA: <span id="bestName">---</span><br>
+                    REKOR: <span id="bestScore">0</span>
+                </div>
+
                 <button class="btn-fancy" style="font-size: 1rem; padding: 10px 25px;" onclick="startGame()">Main Lagi</button>
             </div>
         </div>
@@ -213,10 +208,22 @@
         let score, level, timeLeft, gameActive = false, timerInterval;
         let clicksInLevel, clicksNeeded;
 
-        // Muat High Score
-        document.getElementById('bestScore').textContent = localStorage.getItem('reflekHighScore') || 0;
+        // --- SISTEM LEADERBOARD AWAL ---
+        let savedScore = localStorage.getItem('reflekHighScore');
+        let savedName = localStorage.getItem('reflekHighName');
 
-        function playBeep(freq, duration = 0.1) {
+        if (!savedScore) {
+            // Skor tantangan "palsu" agar orang tertarik mengalahkan
+            localStorage.setItem('reflekHighScore', 150);
+            localStorage.setItem('reflekHighName', "Sang Legenda");
+            savedScore = 150;
+            savedName = "Sang Legenda";
+        }
+
+        document.getElementById('bestScore').textContent = savedScore;
+        document.getElementById('bestName').textContent = savedName;
+
+        function playSound(freq, duration = 0.1) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
@@ -233,35 +240,13 @@
             target.style.top = Math.random() * maxY + 'px';
         }
 
-        function levelUp() {
-            level++;
-            clicksInLevel = 0;
-            clicksNeeded += 3;
-            timeLeft += 5; // Bonus waktu
-            levelDisplay.textContent = level;
-            
-            // Animasi Flash
-            container.classList.add('level-up-flash');
-            setTimeout(() => container.classList.remove('level-up-flash'), 500);
-            
-            // Suara Level Up
-            playBeep(900, 0.4);
-            
-            // Ukuran target mengecil
-            let size = Math.max(25, 65 - (level * 4));
-            target.style.width = size + 'px';
-            target.style.height = size + 'px';
-        }
-
         function startGame() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            // Reset Variable
             score = 0; level = 1; clicksInLevel = 0; clicksNeeded = 5;
             timeLeft = parseInt(document.getElementById('timeSelect').value);
             gameActive = true;
 
-            // UI Reset
             scoreDisplay.textContent = score;
             levelDisplay.textContent = level;
             clicksLeftDisplay.textContent = clicksNeeded;
@@ -274,7 +259,6 @@
             target.style.height = '65px';
 
             moveTarget();
-            
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 timeLeft--;
@@ -288,32 +272,48 @@
             clearInterval(timerInterval);
             target.style.display = 'none';
             
-            // Update High Score
-            const hiScore = localStorage.getItem('reflekHighScore') || 0;
-            if (score > hiScore) {
+            const currentHiScore = parseInt(localStorage.getItem('reflekHighScore') || 0);
+            
+            if (score > currentHiScore) {
+                let userName = prompt("LUAR BIASA! Skor Tertinggi Baru. Masukkan Nama Kamu:");
+                if (!userName) userName = "Player";
+                
                 localStorage.setItem('reflekHighScore', score);
-                document.getElementById('msgTitle').textContent = "REKOR BARU! 🏆";
+                localStorage.setItem('reflekHighName', userName);
+                
+                document.getElementById('msgTitle').textContent = "PENGUASA BARU! 👑";
+                document.getElementById('bestName').textContent = userName;
+                document.getElementById('bestScore').textContent = score;
             } else {
                 document.getElementById('msgTitle').textContent = "WAKTU HABIS!";
             }
             
             document.getElementById('finalScore').textContent = score;
-            document.getElementById('bestScore').textContent = localStorage.getItem('reflekHighScore');
             gameOverScreen.style.display = 'flex';
         }
 
-        target.addEventListener('mousedown', (e) => {
+        target.addEventListener('mousedown', () => {
             if (!gameActive) return;
             
             score++;
             clicksInLevel++;
             scoreDisplay.textContent = score;
-            
-            // Suara klik acak
-            playBeep(400 + Math.random() * 500);
+            playSound(400 + Math.random() * 500);
 
             if (clicksInLevel >= clicksNeeded) {
-                levelUp();
+                level++;
+                clicksInLevel = 0;
+                clicksNeeded += 3;
+                timeLeft += 5; // Bonus waktu
+                levelDisplay.textContent = level;
+                
+                container.classList.add('level-up-flash');
+                setTimeout(() => container.classList.remove('level-up-flash'), 500);
+                playSound(800, 0.3);
+                
+                let size = Math.max(25, 65 - (level * 4));
+                target.style.width = size + 'px';
+                target.style.height = size + 'px';
             }
             
             clicksLeftDisplay.textContent = clicksNeeded - clicksInLevel;
