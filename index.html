@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tes Reflek - Combo Edition</title>
+    <title>Tes Reflek - Seberapa Cepat Reflekmu</title>
     <style>
         :root {
             --neon: #00f2fe;
@@ -181,7 +181,7 @@
             clearInterval(timerInterval);
             target.style.display = 'none';
             
-            const hiScore = parseInt(localStorage.getItem('reflekHighScore'));
+            const hiScore = parseInt(localStorage.getItem('reflekHighScore')); Vario 30000point 
             if (score > hiScore) {
                 let name = prompt("REKOR BARU! Masukkan Nama:");
                 localStorage.setItem('reflekHighScore', score);
@@ -201,7 +201,7 @@
             let points = 300;
             let isCombo = false;
 
-            // Logika Kombo: Jika klik di bawah 500ms (sangat cepat)
+            // Logika Kombo: Jika klik di bawah 1000ms (sangat cepat)
             if (diff < 500) {
                 points = 600; // 300 x 2
                 isCombo = true;
