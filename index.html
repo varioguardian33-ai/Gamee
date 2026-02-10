@@ -3,32 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tes Reflek - Combo Edition</title>
+    <title>Tes Reflek - Seberapa Cepat Reflekmu </title>
     <style>
         :root {
-            --neon: #00f2fe;
-            --danger: #ff4757;
-            --success: #2ed573;
-            --bg: #121212;
-            --gold: #ffd700;
+            --neon: #00f2fe; --danger: #ff4757; --success: #2ed573; --bg: #121212; --gold: #ffd700;
         }
 
         /* --- ANIMASI --- */
-        @keyframes fadeInScale {
-            0% { opacity: 0; transform: scale(0.9); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes slideDown {
-            0% { opacity: 0; transform: translateY(-30px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes comboPop {
-            0% { transform: scale(1); color: white; }
-            50% { transform: scale(1.5); color: var(--gold); text-shadow: 0 0 10px var(--gold); }
-            100% { transform: scale(1); color: white; }
-        }
+        @keyframes fadeInScale { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes slideDown { 0% { opacity: 0; transform: translateY(-30px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes comboPop { 0% { transform: scale(1); } 50% { transform: scale(1.3); color: var(--gold); } 100% { transform: scale(1); } }
 
         body { 
             background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif;
@@ -36,10 +20,7 @@
             height: 100vh; margin: 0; overflow: hidden; animation: fadeInScale 0.8s ease-out;
         }
 
-        h1 { 
-            font-size: 3rem; margin: 0 0 10px 0; text-shadow: 3px 3px 0px var(--danger);
-            text-transform: uppercase; animation: slideDown 0.6s ease-out 0.2s both;
-        }
+        h1 { font-size: 3rem; margin: 0 0 10px 0; text-shadow: 3px 3px 0px var(--danger); text-transform: uppercase; animation: slideDown 0.6s ease-out 0.2s both; }
 
         .stats-container {
             display: flex; gap: 20px; background: #222; padding: 12px 35px;
@@ -49,7 +30,7 @@
 
         .stat-box { font-size: 1rem; font-weight: bold; text-align: center; }
         #scoreVal { color: var(--success); font-size: 1.2rem; }
-        #comboText { color: var(--gold); font-weight: bold; display: block; height: 20px; }
+        #comboText { color: var(--gold); font-weight: bold; display: block; height: 20px; font-size: 0.9rem; }
 
         #game-container {
             position: relative; width: 90vw; max-width: 700px; height: 450px;
@@ -65,10 +46,11 @@
             font-size: 28px; user-select: none; z-index: 5;
         }
 
+        /* Overlay Fix - Pastikan z-index benar */
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 10;
+            align-items: center; justify-content: center; z-index: 20;
         }
 
         .modal { background: white; color: #333; padding: 30px; border-radius: 20px; text-align: center; min-width: 280px; }
@@ -77,12 +59,13 @@
             padding: 15px 35px; font-size: 1.2rem; background: linear-gradient(45deg, var(--danger), #ff6b81);
             color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold;
             text-transform: uppercase; box-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
-            animation: pulse 1.5s infinite; margin-top: 15px;
+            animation: pulse 1.5s infinite; margin-top: 15px; pointer-events: auto;
         }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-
         .combo-active { animation: comboPop 0.3s ease-out; }
+        .level-up-flash { animation: flashEffect 0.5s ease-out; }
+        @keyframes flashEffect { 0% { background: rgba(46, 213, 115, 0.4); } 100% { background: #1a1a1a; } }
     </style>
 </head>
 <body>
@@ -100,7 +83,9 @@
         <div id="start-screen" class="overlay">
             <button class="btn-fancy" onclick="startGame()">Mulai Game</button>
         </div>
+
         <div id="target">🎯</div>
+        
         <div id="game-over-screen" class="overlay" style="display: none;">
             <div class="modal">
                 <h2 id="msgTitle" style="margin:0">WAKTU HABIS!</h2>
@@ -114,8 +99,10 @@
         </div>
     </div>
 
+    <button onclick="setCustomScore()" style="position:fixed; bottom:10px; right:10px; opacity:0.1; background:none; border:none; color:white; cursor:pointer; z-index:100;">⚙️</button>
+
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx;
         const target = document.getElementById('target');
         const scoreDisplay = document.getElementById('scoreVal');
         const comboDisplay = document.getElementById('comboText');
@@ -123,18 +110,28 @@
         const levelDisplay = document.getElementById('levelVal');
         const clicksLeftDisplay = document.getElementById('clicksLeft');
         
-        let score, level, timeLeft, gameActive = false, timerInterval;
+        let score, level, timeLeft, gameActive = false, timerInterval, bgMusicInterval;
         let clicksInLevel, clicksNeeded, lastClickTime;
 
-        // Leaderboard Setup
+        // Init Leaderboard
         if (!localStorage.getItem('reflekHighScore')) {
-            localStorage.setItem('reflekHighScore', 45000); // 150 target x 300 poin
+            localStorage.setItem('reflekHighScore', 45000);
             localStorage.setItem('reflekHighName', "Sang Legenda");
         }
         document.getElementById('bestScore').textContent = localStorage.getItem('reflekHighScore');
         document.getElementById('bestName').textContent = localStorage.getItem('reflekHighName');
 
-        function playSound(freq, duration = 0.1, type = 'triangle', volume = 0.1) {
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(freq, duration = 0.1, type = 'triangle', volume = 0.05) {
+            if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
@@ -146,7 +143,8 @@
         }
 
         function startGame() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            initAudio(); // Penting: Audio harus diaktifkan lewat klik user
+            
             score = 0; level = 1; clicksInLevel = 0; clicksNeeded = 5; timeLeft = 30;
             lastClickTime = 0; gameActive = true;
             
@@ -154,12 +152,23 @@
             comboDisplay.textContent = "";
             levelDisplay.textContent = "1";
             clicksLeftDisplay.textContent = "5";
+            timerDisplay.textContent = "30s";
             
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('game-over-screen').style.display = 'none';
             target.style.display = 'flex';
             
             moveTarget();
+            
+            // Loop Backsound
+            clearInterval(bgMusicInterval);
+            const notes = [261.63, 329.63, 392.00, 523.25];
+            let n = 0;
+            bgMusicInterval = setInterval(() => {
+                if(gameActive) playSound(notes[n%4], 0.2, 'sine', 0.02);
+                n++;
+            }, 500);
+
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 timeLeft--;
@@ -179,6 +188,7 @@
         function endGame() {
             gameActive = false;
             clearInterval(timerInterval);
+            clearInterval(bgMusicInterval);
             target.style.display = 'none';
             
             const hiScore = parseInt(localStorage.getItem('reflekHighScore'));
@@ -195,42 +205,48 @@
 
         target.addEventListener('mousedown', () => {
             if (!gameActive) return;
-            
             const now = Date.now();
             const diff = now - lastClickTime;
             let points = 300;
-            let isCombo = false;
 
-            // Logika Kombo: Jika klik di bawah 500ms (sangat cepat)
-            if (diff < 500) {
-                points = 600; // 300 x 2
-                isCombo = true;
+            if (lastClickTime !== 0 && diff < 500) {
+                points = 600;
                 comboDisplay.textContent = "COMBO X2!";
                 comboDisplay.classList.add('combo-active');
                 setTimeout(() => comboDisplay.classList.remove('combo-active'), 300);
-                playSound(1000, 0.2, 'square', 0.05); // Suara kombo lebih tinggi
+                playSound(1000, 0.2, 'square', 0.03);
             } else {
                 comboDisplay.textContent = "";
-                playSound(440, 0.1, 'triangle', 0.1); // Suara klik biasa
+                playSound(440, 0.1, 'triangle', 0.05);
             }
 
             score += points;
             clicksInLevel++;
             lastClickTime = now;
-            
             scoreDisplay.textContent = score;
 
             if (clicksInLevel >= clicksNeeded) {
                 level++; clicksInLevel = 0; clicksNeeded += 3; timeLeft += 5;
                 levelDisplay.textContent = level;
-                playSound(800, 0.4, 'sawtooth', 0.05);
+                document.getElementById('game-container').classList.add('level-up-flash');
+                setTimeout(() => document.getElementById('game-container').classList.remove('level-up-flash'), 500);
+                playSound(800, 0.4, 'sawtooth', 0.03);
                 target.style.width = Math.max(25, 65 - (level * 4)) + 'px';
                 target.style.height = target.style.width;
             }
-            
             clicksLeftDisplay.textContent = clicksNeeded - clicksInLevel;
             moveTarget();
         });
+
+        // FUNGSI ADMIN
+        function setCustomScore() {
+            let scoreBaru = prompt("Masukkan Skor Tertinggi Baru:");
+            if (scoreBaru !== null) {
+                localStorage.setItem('reflekHighScore', scoreBaru);
+                document.getElementById('bestScore').textContent = scoreBaru;
+                alert("Skor tantangan berhasil diubah menjadi " + scoreBaru);
+            }
+        }
     </script>
 </body>
 </html>
